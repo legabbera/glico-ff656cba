@@ -40,6 +40,8 @@ export function AppHeader() {
   });
   const access = accessQ.data;
 
+  const firstName = profileQ.data?.profile?.display_name?.split(" ")[0] || "";
+
   const badge = access
     ? access.reason === "admin"
       ? null
@@ -125,7 +127,7 @@ export function AppHeader() {
                 ) : (
                   <it.icon className="h-4 w-4" />
                 )}
-                <span>{it.label}</span>
+                <span className="uppercase">{it.to === "/perfil" && firstName ? firstName : it.label}</span>
               </Link>
             ))}
             <button
@@ -211,7 +213,7 @@ export function AppHeader() {
               ) : (
                 <it.icon className="h-5 w-5" />
               )}
-              <span>{it.label}</span>
+              <span className="uppercase">{it.to === "/perfil" && firstName ? firstName : it.label}</span>
             </Link>
           ))}
         </div>

@@ -35,6 +35,7 @@ import {
   CONTEXT_LABEL,
   toneClasses,
 } from "@/lib/glucose-utils";
+import { getMyProfile } from "@/lib/profile.functions";
 
 export const Route = createFileRoute("/_authenticated/registrar")({
   head: () => ({
@@ -62,6 +63,7 @@ function RegistrarPage() {
   const qc = useQueryClient();
   const append = useServerFn(appendMeasurement);
   const list = useServerFn(listMeasurements);
+  const fetchProfile = useServerFn(getMyProfile);
   const { hasSession } = useSession();
 
   // Avoid SSR/CSR hydration mismatch: hydrate with stable values, then sync on client.
@@ -86,6 +88,14 @@ function RegistrarPage() {
     queryFn: () => list({ data: {} }),
     enabled: hasSession,
   });
+
+  const profileQ = useQuery({
+    queryKey: ["my-profile"],
+    queryFn: () => fetchProfile(),
+    enabled: hasSession,
+  });
+
+  const firstName = profileQ.data?.profile?.display_name?.split(" ")[0] || "";
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -146,7 +156,9 @@ function RegistrarPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-2xl sm:text-3xl">Bem-vindo</h1>
+        <h1 className="font-display text-2xl sm:text-3xl">
+          Bem-vindo{firstName ? `, ${firstName}` : ""}
+        </h1>
         <p className="text-sm text-muted-foreground">Registre uma medição em segundos</p>
       </div>
       <div className="grid gap-6 lg:grid-cols-5">
