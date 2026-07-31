@@ -2,13 +2,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, Camera, UserCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DiabetesTypeSlider, type DiabetesType } from "@/components/DiabetesTypeSlider";
 import { getMyProfile, updateMyProfile } from "@/lib/profile.functions";
 import { useSession } from "@/hooks/use-session";
@@ -37,6 +39,8 @@ function PerfilPage() {
   const [gMax, setGMax] = useState(180);
   const [foodsBetter, setFoodsBetter] = useState("");
   const [foodsWorse, setFoodsWorse] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     const p = q.data?.profile;
@@ -47,14 +51,44 @@ function PerfilPage() {
     setGMin(p.glucose_min);
     setGMax(p.glucose_max);
     setFoodsBetter(p.foods_better ?? "");
+    setFoodsBetter(p.foods_better ?? "");
     setFoodsWorse(p.foods_worse ?? "");
+    setAvatarUrl(p.avatar_url ?? "");
   }, [q.data]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setIsUploading(true);
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${q.data?.profile.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      
+      setAvatarUrl(data.publicUrl);
+      toast.success("Foto enviada! Clique em Salvar para confirmar.");
+    } catch (error: any) {
+      toast.error("Erro ao enviar foto", { description: error.message });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const m = useMutation({
     mutationFn: () =>
       update({
         data: {
           display_name: displayName || null,
+          avatar_url: avatarUrl || null,
           birth_date: birthDate || null,
           diabetes_type: type,
           glucose_min: gMin,
@@ -97,6 +131,32 @@ function PerfilPage() {
             m.mutate();
           }}
         >
+          <div className="flex flex-col items-center justify-center gap-3 pb-2">
+            <Avatar className="h-24 w-24 border shadow-sm">
+              <AvatarImage src={avatarUrl} alt="Avatar" className="object-cover" />
+              <AvatarFallback className="bg-muted">
+                <UserCircle2 className="h-12 w-12 text-muted-foreground" />
+              </AvatarFallback>
+            </Avatar>
+            <div className="relative">
+              <input
+                type="file"
+                accept="image/*"
+                id="avatar-upload"
+                className="hidden"
+                onChange={handleAvatarUpload}
+                disabled={isUploading}
+              />
+              <Label
+                htmlFor="avatar-upload"
+                className="inline-flex cursor-pointer items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+              >
+                {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />}
+                Alterar foto
+              </Label>
+            </div>
+          </div>
+
           <div>
             <Label htmlFor="dn">Nome completo</Label>
             <Input id="dn" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="mt-1" />

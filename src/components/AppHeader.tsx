@@ -11,6 +11,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import { getMyProfile } from "@/lib/profile.functions";
 import { getAccessStatus } from "@/lib/access.functions";
 import { Sparkles } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const BASE_NAV = [
   { to: "/registrar", label: "REGISTRAR", icon: Activity, exact: true },
@@ -116,7 +117,15 @@ export function AppHeader() {
                 className={topLinkBase}
                 activeProps={{ className: `${topLinkBase} ${topActive}` }}
               >
-                <it.icon className="h-4 w-4" /> <span>{it.label}</span>
+                {it.to === "/perfil" && profileQ.data?.profile?.avatar_url ? (
+                  <Avatar className="h-5 w-5 border border-border/50">
+                    <AvatarImage src={profileQ.data.profile.avatar_url} className="object-cover" />
+                    <AvatarFallback><it.icon className="h-4 w-4" /></AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <it.icon className="h-4 w-4" />
+                )}
+                <span>{it.label}</span>
               </Link>
             ))}
             <button
@@ -194,7 +203,14 @@ export function AppHeader() {
               className={bottomBase}
               activeProps={{ className: `${bottomBase} ${bottomActive}` }}
             >
-              <it.icon className="h-5 w-5" />
+              {it.to === "/perfil" && profileQ.data?.profile?.avatar_url ? (
+                <Avatar className="h-6 w-6 border border-border/50">
+                  <AvatarImage src={profileQ.data.profile.avatar_url} className="object-cover" />
+                  <AvatarFallback><it.icon className="h-5 w-5" /></AvatarFallback>
+                </Avatar>
+              ) : (
+                <it.icon className="h-5 w-5" />
+              )}
               <span>{it.label}</span>
             </Link>
           ))}

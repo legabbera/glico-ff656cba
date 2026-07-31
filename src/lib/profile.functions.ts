@@ -10,6 +10,7 @@ const ProfileUpdateSchema = z.object({
   glucose_max: z.number().int().min(80).max(400).optional(),
   foods_better: z.string().max(2000).nullable().optional(),
   foods_worse: z.string().max(2000).nullable().optional(),
+  avatar_url: z.string().url().nullable().optional(),
 });
 
 export type Profile = {
@@ -24,6 +25,7 @@ export type Profile = {
   foods_worse: string | null;
   is_active: boolean;
   free_access?: boolean;
+  avatar_url?: string | null;
   created_at?: string;
 };
 
