@@ -9,11 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DiabetesTypeSlider, type DiabetesType } from "@/components/DiabetesTypeSlider";
 import { getMyProfile, updateMyProfile } from "@/lib/profile.functions";
 import { useSession } from "@/hooks/use-session";
+
+const UFS = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"];
 
 export const Route = createFileRoute("/_authenticated/perfil")({
   head: () => ({ meta: [{ title: "Perfil — Gllico" }] }),
@@ -34,6 +37,10 @@ function PerfilPage() {
 
   const [displayName, setDisplayName] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [bairro, setBairro] = useState("");
+  const [municipio, setMunicipio] = useState("");
+  const [uf, setUf] = useState("");
+  
   const [type, setType] = useState<DiabetesType | null>(null);
   const [gMin, setGMin] = useState(70);
   const [gMax, setGMax] = useState(180);
@@ -47,10 +54,12 @@ function PerfilPage() {
     if (!p) return;
     setDisplayName(p.display_name ?? "");
     setBirthDate(p.birth_date ?? "");
+    setBairro(p.bairro ?? "");
+    setMunicipio(p.municipio ?? "");
+    setUf(p.uf ?? "");
     setType(p.diabetes_type);
     setGMin(p.glucose_min);
     setGMax(p.glucose_max);
-    setFoodsBetter(p.foods_better ?? "");
     setFoodsBetter(p.foods_better ?? "");
     setFoodsWorse(p.foods_worse ?? "");
     setAvatarUrl(p.avatar_url ?? "");
@@ -90,6 +99,9 @@ function PerfilPage() {
           display_name: displayName || null,
           avatar_url: avatarUrl || null,
           birth_date: birthDate || null,
+          bairro: bairro || null,
+          municipio: municipio || null,
+          uf: uf || null,
           diabetes_type: type,
           glucose_min: gMin,
           glucose_max: gMax,
@@ -121,7 +133,7 @@ function PerfilPage() {
       <Card className="border-border/60 shadow-card">
         <CardHeader>
           <CardTitle className="font-display text-lg">Informações</CardTitle>
-          <CardDescription>Personalize suas metas e preferências</CardDescription>
+          <CardDescription>Personalize suas metas, endereço e preferências</CardDescription>
         </CardHeader>
         <CardContent>
         <form
@@ -157,24 +169,56 @@ function PerfilPage() {
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="dn">Nome completo</Label>
-            <Input id="dn" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="mt-1" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="dn">Nome completo</Label>
+              <Input id="dn" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="mt-1" />
+            </div>
+            <div>
+              <Label htmlFor="bd">Data de nascimento</Label>
+              <Input
+                id="bd"
+                type="date"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+                className="mt-1"
+              />
+            </div>
           </div>
-          <div>
-            <Label htmlFor="bd">Data de nascimento</Label>
-            <Input
-              id="bd"
-              type="date"
-              value={birthDate}
-              onChange={(e) => setBirthDate(e.target.value)}
-              className="mt-1"
-            />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-1">
+              <Label htmlFor="bairro">Bairro</Label>
+              <Input id="bairro" value={bairro} onChange={(e) => setBairro(e.target.value)} className="mt-1" placeholder="Ex: Centro" />
+            </div>
+            <div className="md:col-span-1">
+              <Label htmlFor="municipio">Município</Label>
+              <Input id="municipio" value={municipio} onChange={(e) => setMunicipio(e.target.value)} className="mt-1" placeholder="Ex: São Paulo" />
+            </div>
+            <div className="md:col-span-1">
+              <Label htmlFor="uf">UF</Label>
+              <div className="mt-1">
+                <Select value={uf} onValueChange={setUf}>
+                  <SelectTrigger id="uf">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {UFS.map((state) => (
+                      <SelectItem key={state} value={state}>
+                        {state}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
+
           <div>
             <Label>Tipo de diabetes</Label>
             <DiabetesTypeSlider value={type} onChange={setType} className="mt-1" />
           </div>
+          
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="gmin">Meta mínima (mg/dL)</Label>
@@ -201,6 +245,7 @@ function PerfilPage() {
               />
             </div>
           </div>
+          
           <div>
             <Label htmlFor="fb">Alimentos mais nutritivos pra mim</Label>
             <Textarea
@@ -213,6 +258,7 @@ function PerfilPage() {
               placeholder="ex.: aveia, abacate, ovos…"
             />
           </div>
+          
           <div>
             <Label htmlFor="fw">Alimentos menos danosos / a evitar</Label>
             <Textarea
@@ -225,6 +271,7 @@ function PerfilPage() {
               placeholder="ex.: refrigerantes, doces…"
             />
           </div>
+          
           <Button
             type="submit"
             disabled={m.isPending}

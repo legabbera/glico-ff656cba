@@ -18,7 +18,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Loader2 } from "lucide-react";
+import { Loader2, CalendarIcon } from "lucide-react";
 import { ShareActions } from "@/components/ShareActions";
 import {
   Card,
@@ -28,6 +28,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { listMeasurements } from "@/lib/glucose.functions";
 import { useSession } from "@/hooks/use-session";
 import {
@@ -36,6 +43,7 @@ import {
   parseDateTime,
   summarize,
   withValor,
+  formatBR,
 } from "@/lib/glucose-utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -55,7 +63,12 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
 });
 
-type Periodo = "diario" | "mensal" | "anual";
+type Periodo = "hoje" | "mensal" | "12m";
+
+const MESES = [
+  "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+  "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro",
+];
 
 const PIE_COLORS = ["#008080", "#7FFFD4", "#5AC8B5", "#0EA5A4", "#94E5D8"];
 
@@ -68,20 +81,27 @@ function DashboardPage() {
     queryFn: () => list({ data: u ? { targetUserId: u } : {} }),
     enabled: hasSession,
   });
-  const [periodo, setPeriodo] = useState<Periodo>("diario");
+  const [periodo, setPeriodo] = useState<Periodo>("hoje");
+  const now = new Date();
+  const [mes, setMes] = useState<number>(now.getMonth());
+  const [ano, setAno] = useState<number>(now.getFullYear());
 
   const itens = q.data?.items ?? [];
 
   const range = useMemo(() => {
+    if (periodo === "mensal") {
+      const from = new Date(ano, mes, 1, 0, 0, 0, 0);
+      const to = new Date(ano, mes + 1, 0, 23, 59, 59, 999);
+      return { from, to };
+    }
     const to = new Date();
     const from = new Date();
-    if (periodo === "diario") from.setHours(0, 0, 0, 0);
-    else if (periodo === "mensal") from.setDate(to.getDate() - 30);
+    if (periodo === "hoje") from.setHours(0, 0, 0, 0);
     else from.setFullYear(to.getFullYear() - 1);
-    if (periodo !== "diario") from.setHours(0, 0, 0, 0);
+    if (periodo !== "hoje") from.setHours(0, 0, 0, 0);
     to.setHours(23, 59, 59, 999);
     return { from, to };
-  }, [periodo]);
+  }, [periodo, mes, ano]);
 
   const filtrados = useMemo(
     () => filterByRange(itens, range.from, range.to),
@@ -98,7 +118,7 @@ function DashboardPage() {
       .map((m) => ({
         when: parseDateTime(m).getTime(),
         label:
-          periodo === "diario"
+          periodo === "hoje"
             ? m.hora
             : m.data.split("-").reverse().slice(0, 2).join("/"),
         valor: m.valor,
@@ -114,7 +134,7 @@ function DashboardPage() {
     const last = sorted.slice(-12);
     return last.map((m) => ({
       label:
-        periodo === "diario"
+        periodo === "hoje"
           ? m.hora
           : m.data.split("-").reverse().slice(0, 2).join("/"),
       valor: m.valor,
@@ -135,17 +155,44 @@ function DashboardPage() {
         <p className="text-sm text-muted-foreground">Acompanhe suas métricas no período selecionado</p>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Tabs
-          value={periodo}
-          onValueChange={(v) => setPeriodo(v as Periodo)}
-          className="w-full sm:w-auto"
-        >
-          <TabsList className="grid w-full grid-cols-3 bg-secondary/70 sm:w-auto sm:inline-flex">
-            <TabsTrigger value="diario">Diário</TabsTrigger>
-            <TabsTrigger value="mensal">Mensal</TabsTrigger>
-            <TabsTrigger value="anual">Anual</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Tabs
+            value={periodo}
+            onValueChange={(v) => setPeriodo(v as Periodo)}
+            className="w-full sm:w-auto"
+          >
+            <TabsList className="grid w-full grid-cols-3 bg-secondary/70 sm:w-auto sm:inline-flex">
+              <TabsTrigger value="hoje">Hoje</TabsTrigger>
+              <TabsTrigger value="mensal">Mensal</TabsTrigger>
+              <TabsTrigger value="12m">1 ano</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {periodo === "mensal" && (
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              <Select value={String(mes)} onValueChange={(v) => setMes(Number(v))}>
+                <SelectTrigger className="w-full sm:w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MESES.map((m, i) => (
+                    <SelectItem key={i} value={String(i)}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={String(ano)} onValueChange={(v) => setAno(Number(v))}>
+                <SelectTrigger className="w-full sm:w-[100px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 6 }, (_, i) => now.getFullYear() - i).map((y) => (
+                    <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
         <ShareActions
           items={filtrados}
           from={range.from}
@@ -169,7 +216,7 @@ function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">
-                Evolução ({periodo})
+                Evolução ({periodo === "hoje" ? "Hoje" : periodo === "mensal" ? "Mensal" : "1 ano"})
               </CardTitle>
               <CardDescription>
                 Faixa normal destacada em verde

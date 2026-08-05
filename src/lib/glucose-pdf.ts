@@ -11,12 +11,17 @@ import {
 } from "./glucose-utils";
 import logoUrl from "@/assets/gllico-logo.png";
 
-async function loadLogoDataUrl(): Promise<string> {
+async function loadLogoDataUrl(): Promise<{ data: string; w: number; h: number }> {
   const res = await fetch(logoUrl);
   const blob = await res.blob();
   return await new Promise((resolve, reject) => {
     const r = new FileReader();
-    r.onload = () => resolve(r.result as string);
+    r.onload = () => {
+      const img = new Image();
+      img.onload = () => resolve({ data: r.result as string, w: img.width, h: img.height });
+      img.onerror = reject;
+      img.src = r.result as string;
+    };
     r.onerror = reject;
     r.readAsDataURL(blob);
   });
@@ -35,7 +40,10 @@ export async function generatePdfReport(
   // Logo
   try {
     const logo = await loadLogoDataUrl();
-    doc.addImage(logo, "PNG", 14, 10, 36, 24);
+    const ratio = logo.w / logo.h;
+    const height = 14; // Altura base
+    const width = height * ratio;
+    doc.addImage(logo.data, "PNG", 14, 10, width, height);
   } catch {
     // ignore logo failure
   }

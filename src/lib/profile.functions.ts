@@ -11,6 +11,9 @@ const ProfileUpdateSchema = z.object({
   foods_better: z.string().max(2000).nullable().optional(),
   foods_worse: z.string().max(2000).nullable().optional(),
   avatar_url: z.string().url().nullable().optional(),
+  bairro: z.string().max(100).nullable().optional(),
+  municipio: z.string().max(100).nullable().optional(),
+  uf: z.string().length(2).nullable().optional(),
 });
 
 export type Profile = {
@@ -27,6 +30,9 @@ export type Profile = {
   free_access?: boolean;
   avatar_url?: string | null;
   created_at?: string;
+  bairro?: string | null;
+  municipio?: string | null;
+  uf?: string | null;
 };
 
 export const getMyProfile = createServerFn({ method: "GET" })

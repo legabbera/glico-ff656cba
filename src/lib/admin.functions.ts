@@ -35,6 +35,10 @@ export type AdminUser = {
   free_access: boolean;
   created_at: string | null;
   trial_days_left: number;
+  bairro?: string | null;
+  municipio?: string | null;
+  uf?: string | null;
+  subscription_status?: string | null;
 };
 
 export const listUsersAdmin = createServerFn({ method: "GET" })
@@ -43,7 +47,7 @@ export const listUsersAdmin = createServerFn({ method: "GET" })
     await assertAdmin(context.supabase, context.userId);
     const { data: profiles, error } = await supabaseAdmin
       .from("profiles")
-      .select("id, email, display_name, diabetes_type, is_active, free_access, created_at")
+      .select("id, email, display_name, diabetes_type, is_active, free_access, created_at, bairro, municipio, uf, subscription_status")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
 
@@ -81,9 +85,30 @@ export const listUsersAdmin = createServerFn({ method: "GET" })
         free_access: !!(p.free_access as boolean | null),
         created_at: createdAt,
         trial_days_left: trialDaysLeft,
+        bairro: p.bairro as string | null,
+        municipio: p.municipio as string | null,
+        uf: p.uf as string | null,
+        subscription_status: p.subscription_status as string | null,
       };
     });
-    return { users };
+
+    const now = Date.now();
+    const metrics = {
+      totalUsers: users.length,
+      activeSubscribers: users.filter((u) => u.subscription_status === "active").length,
+      dau: users.filter((u) => {
+        if (!u.last_measurement) return false;
+        const diff = now - new Date(u.last_measurement).getTime();
+        return diff <= 24 * 60 * 60 * 1000;
+      }).length,
+      regions: users.reduce((acc, u) => {
+        const uf = u.uf || "N/A";
+        acc[uf] = (acc[uf] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>),
+    };
+
+    return { users, metrics };
   });
 
 export const setUserRoleAdmin = createServerFn({ method: "POST" })
