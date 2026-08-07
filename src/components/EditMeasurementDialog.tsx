@@ -59,7 +59,7 @@ export function EditMeasurementDialog({
   const qc = useQueryClient();
   const update = useServerFn(updateMeasurement);
 
-  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [dateStr, setDateStr] = useState<string>("");
   const [hora, setHora] = useState<string>("");
   const [valor, setValor] = useState<string>("");
   const [contexto, setContexto] = useState<Contexto>("jejum");
@@ -70,11 +70,7 @@ export function EditMeasurementDialog({
 
   useEffect(() => {
     if (!measurement) return;
-    try {
-      setDate(parse(measurement.data, "yyyy-MM-dd", new Date()));
-    } catch {
-      setDate(new Date());
-    }
+    setDateStr(measurement.data ?? "");
     setHora(measurement.hora ?? "");
     setValor(measurement.valor != null ? String(measurement.valor) : "");
     setContexto((measurement.contexto ?? "jejum") as Contexto);
@@ -87,9 +83,9 @@ export function EditMeasurementDialog({
   const mutation = useMutation({
     mutationFn: async () => {
       if (!measurement?.id) throw new Error("ID inválido");
-      if (!date) throw new Error("Data não selecionada");
+      if (!dateStr) throw new Error("Data não selecionada");
       const patch = MeasurementSchema.parse({
-        data: format(date, "yyyy-MM-dd"),
+        data: dateStr,
         hora: hora || null,
         valor: semMedicao ? null : Number(valor),
         contexto: semMedicao ? null : contexto,
@@ -142,30 +138,14 @@ export function EditMeasurementDialog({
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <Label className="text-sm">Data</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "mt-1 w-full justify-start text-left font-normal",
-                      !date && "text-muted-foreground",
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "dd/MM/yyyy") : "Selecionar"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={(d) => d && setDate(d)}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
+              <Label htmlFor="edit-data" className="text-sm">Data</Label>
+              <Input
+                id="edit-data"
+                type="date"
+                value={dateStr}
+                onChange={(e) => setDateStr(e.target.value)}
+                className="mt-1"
+              />
             </div>
             <div>
               <Label htmlFor="edit-hora" className="text-sm">Hora</Label>
