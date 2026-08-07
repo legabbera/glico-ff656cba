@@ -1,9 +1,10 @@
 import { createMiddleware } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { createClient } from "@supabase/supabase-js";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./client";
 
-const url = process.env.EXT_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const anonKey = process.env.EXT_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const url = process.env.EXT_SUPABASE_URL || process.env.VITE_SUPABASE_URL || SUPABASE_URL;
+const anonKey = process.env.EXT_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || SUPABASE_ANON_KEY;
 
 if (!url || !anonKey) {
   console.error("Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables");
