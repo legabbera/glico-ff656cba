@@ -38,7 +38,8 @@ export type Profile = {
 export const getMyProfile = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, userId, userEmail } = context;
+    // @ts-ignore
+    const { supabase, userId, userEmail, user } = context;
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
@@ -46,15 +47,32 @@ export const getMyProfile = createServerFn({ method: "GET" })
       .maybeSingle();
     if (error) throw new Error(error.message);
 
+    const googleName = user?.user_metadata?.full_name || user?.user_metadata?.name;
+
     let profile = data as Profile | null;
     if (!profile) {
       const { data: ins, error: insErr } = await supabase
         .from("profiles")
-        .insert({ id: userId, email: userEmail, display_name: userEmail?.split("@")[0] ?? null })
+        .insert({ 
+          id: userId, 
+          email: userEmail, 
+          display_name: googleName || (userEmail?.split("@")[0] ?? null) 
+        })
         .select("*")
         .single();
       if (insErr) throw new Error(insErr.message);
       profile = ins as Profile;
+    } else {
+      const currentNameIsEmail = !profile.display_name || profile.display_name === userEmail || profile.display_name.toUpperCase() === userEmail?.toUpperCase();
+      if (currentNameIsEmail && googleName) {
+        await supabase.from("profiles").update({ display_name: googleName }).eq("id", userId);
+        profile.display_name = googleName;
+      } else if (currentNameIsEmail && userEmail) {
+        // Fallback to first part of email if no google name
+        const prefix = userEmail.split("@")[0];
+        await supabase.from("profiles").update({ display_name: prefix }).eq("id", userId);
+        profile.display_name = prefix;
+      }
     }
 
     const { data: roles } = await supabase
