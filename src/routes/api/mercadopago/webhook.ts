@@ -51,7 +51,7 @@ export const APIRoute = createAPIFileRoute("/api/mercadopago/webhook")({
 
         if (userId) {
           const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-          const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+          const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.EXT_SUPABASE_SERVICE_ROLE_KEY;
 
           if (!supabaseUrl || !supabaseServiceKey) {
             console.error("Supabase service role or url missing");
