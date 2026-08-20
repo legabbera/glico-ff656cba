@@ -31,9 +31,9 @@ export async function generatePdfReport(
   items: Measurement[],
   from: Date,
   to: Date,
-  opts: { includeCharts?: boolean; periodLabel?: string } = {},
-): Promise<void> {
-  const { includeCharts = false, periodLabel } = opts;
+  opts: { includeCharts?: boolean; periodLabel?: string; asBlob?: boolean } = {},
+): Promise<Blob | void> {
+  const { includeCharts = false, periodLabel, asBlob = false } = opts;
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
 
@@ -355,7 +355,9 @@ export async function generatePdfReport(
     );
   }
 
-  doc.save(
-    `gllico-relatorio-${formatBR(from).replaceAll("/", "-")}_${formatBR(to).replaceAll("/", "-")}.pdf`,
-  );
+  const filename = `gllico-relatorio-${formatBR(from).replaceAll("/", "-")}_${formatBR(to).replaceAll("/", "-")}.pdf`;
+  if (asBlob) {
+    return doc.output("blob");
+  }
+  doc.save(filename);
 }
