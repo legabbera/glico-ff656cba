@@ -77,7 +77,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" },
+      { name: "theme-color", content: "#008080" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-title", content: "Gllico" },
       { title: "Gllico" },
       { name: "description", content: "Glico is a web application for logging glucose measurements and visualizing data." },
       { name: "author", content: "Lovable" },
@@ -92,6 +96,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/81642628-cccc-4d07-83be-ddad6ba6e886/id-preview-8fbaa84e--2a03827a-9dcd-4bca-b661-89782578edc5.lovable.app-1779914071966.png" },
     ],
     links: [
+      {
+        rel: "manifest",
+        href: "/manifest.webmanifest",
+      },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       {
         rel: "stylesheet",
         href: appCss,
@@ -171,6 +180,8 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
@@ -196,6 +207,7 @@ function RootComponent() {
           >
             <Outlet />
           </main>
+          <PWAInstallPrompt />
         </div>
         <Toaster richColors position="top-center" />
       </ThemeProvider>
