@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +38,18 @@ export const Route = createFileRoute("/")({
 });
 
 function LandingPage() {
+  const [isLogged, setIsLogged] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setIsLogged(!!data.session));
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_e, s) => {
+      setIsLogged(!!s);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* NAV */}
@@ -45,19 +59,44 @@ function LandingPage() {
             <img src={gllicoLogo} alt="Gllico" className="h-8 w-auto sm:h-9" />
           </Link>
           <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
-            <a href="#recursos" className="transition hover:text-foreground">Recursos</a>
-            <a href="#como-funciona" className="transition hover:text-foreground">Como funciona</a>
-            <a href="#seguranca" className="transition hover:text-foreground">Segurança</a>
+            <a href="#recursos" className="transition hover:text-foreground">
+              Recursos
+            </a>
+            <a href="#como-funciona" className="transition hover:text-foreground">
+              Como funciona
+            </a>
+            <a href="#seguranca" className="transition hover:text-foreground">
+              Segurança
+            </a>
           </nav>
           <div className="flex items-center gap-2">
-            <Link to="/login" className="hidden text-sm font-medium text-muted-foreground hover:text-foreground sm:block">
-              Entrar
-            </Link>
-            <Link to="/login">
-              <Button size="sm" className="rounded-full bg-accent px-4 text-accent-foreground hover:bg-accent/90">
-                Começar grátis
-              </Button>
-            </Link>
+            {isLogged ? (
+              <Link to="/dashboard">
+                <Button
+                  size="sm"
+                  className="rounded-full bg-accent px-4 text-accent-foreground hover:bg-accent/90"
+                >
+                  Acessar Painel
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="hidden text-sm font-medium text-muted-foreground hover:text-foreground sm:block"
+                >
+                  Entrar
+                </Link>
+                <Link to="/login">
+                  <Button
+                    size="sm"
+                    className="rounded-full bg-accent px-4 text-accent-foreground hover:bg-accent/90"
+                  >
+                    Começar grátis
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -79,19 +118,22 @@ function LandingPage() {
               e sob controle.
             </h1>
             <p className="mt-5 max-w-lg text-lg leading-relaxed text-muted-foreground">
-              Registre em segundos, visualize tendências claras e leve um relatório
-              completo para o médico — sem planilha, sem caderno, sem esforço.
+              Registre em segundos, visualize tendências claras e leve um relatório completo para o
+              médico — sem planilha, sem caderno, sem esforço.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link to="/login">
+              <Link to={isLogged ? "/registrar" : "/login"}>
                 <Button
                   size="lg"
                   className="h-12 w-full rounded-full bg-accent px-6 text-base text-accent-foreground shadow-soft hover:bg-accent/90 sm:w-auto"
                 >
-                  Criar meu diário <ArrowRight className="ml-1.5 h-4 w-4" />
+                  {isLogged ? "Registrar medição" : "Criar meu diário"}{" "}
+                  <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Button>
               </Link>
-              <p className="text-sm text-muted-foreground">Grátis · sem cartão de crédito</p>
+              {!isLogged && (
+                <p className="text-sm text-muted-foreground">Grátis · sem cartão de crédito</p>
+              )}
             </div>
             <ul className="mt-8 grid grid-cols-2 gap-3 text-sm text-muted-foreground sm:flex sm:flex-wrap sm:gap-x-6">
               {["Sem instalar", "Dados criptografados", "Acesso em qualquer aparelho"].map((f) => (
@@ -192,13 +234,15 @@ function LandingPage() {
       <section id="recursos" className="border-t border-border/50 bg-muted/30">
         <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-2xl text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Recursos</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+              Recursos
+            </p>
             <h2 className="mt-3 text-3xl font-bold uppercase sm:text-4xl">
               Feito para o cuidado do dia a dia
             </h2>
             <p className="mt-3 text-muted-foreground">
-              Todas as ferramentas que você precisa em um só lugar. Simples para começar,
-              completo para acompanhar sua evolução.
+              Todas as ferramentas que você precisa em um só lugar. Simples para começar, completo
+              para acompanhar sua evolução.
             </p>
           </div>
 
@@ -253,17 +297,38 @@ function LandingPage() {
       {/* HOW IT WORKS */}
       <section id="como-funciona" className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Como funciona</p>
-          <h2 className="mt-3 text-3xl font-bold uppercase sm:text-4xl">3 passos e você já tem seu diário</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+            Como funciona
+          </p>
+          <h2 className="mt-3 text-3xl font-bold uppercase sm:text-4xl">
+            3 passos e você já tem seu diário
+          </h2>
         </div>
         <div className="mt-14 grid gap-6 md:grid-cols-3">
           {[
-            { n: "01", title: "Crie sua conta", desc: "Email e senha. Menos de um minuto. Grátis." },
-            { n: "02", title: "Registre a medição", desc: "Valor, contexto e horário. O app faz o resto." },
-            { n: "03", title: "Acompanhe e compartilhe", desc: "Gráficos, PDF e envio pelo WhatsApp." },
+            {
+              n: "01",
+              title: "Crie sua conta",
+              desc: "Email e senha. Menos de um minuto. Grátis.",
+            },
+            {
+              n: "02",
+              title: "Registre a medição",
+              desc: "Valor, contexto e horário. O app faz o resto.",
+            },
+            {
+              n: "03",
+              title: "Acompanhe e compartilhe",
+              desc: "Gráficos, PDF e envio pelo WhatsApp.",
+            },
           ].map((s) => (
-            <div key={s.n} className="relative rounded-2xl border border-border/60 bg-card p-6 shadow-soft">
-              <span className="font-display text-5xl font-bold tracking-tight text-accent/25">{s.n}</span>
+            <div
+              key={s.n}
+              className="relative rounded-2xl border border-border/60 bg-card p-6 shadow-soft"
+            >
+              <span className="font-display text-5xl font-bold tracking-tight text-accent/25">
+                {s.n}
+              </span>
               <h3 className="mt-2 text-xl font-semibold">{s.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.desc}</p>
             </div>
@@ -275,14 +340,16 @@ function LandingPage() {
       <section id="seguranca" className="border-t border-border/50 bg-gradient-warm">
         <div className="mx-auto grid max-w-6xl gap-10 px-5 py-20 sm:px-6 sm:py-24 lg:grid-cols-[1.2fr_1fr] lg:items-center">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Segurança</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+              Segurança
+            </p>
             <h2 className="mt-3 text-3xl font-bold uppercase sm:text-4xl">
               Sues dados de saúde ficam com você
             </h2>
             <p className="mt-4 max-w-lg text-muted-foreground">
-              Tudo é armazenado em infraestrutura em nuvem com criptografia,
-              controle de acesso por usuário e conformidade com a LGPD.
-              O Gllico é um diário — não substitui o acompanhamento médico.
+              Tudo é armazenado em infraestrutura em nuvem com criptografia, controle de acesso por
+              usuário e conformidade com a LGPD. O Gllico é um diário — não substitui o
+              acompanhamento médico.
             </p>
           </div>
           <ul className="space-y-3">
@@ -292,7 +359,10 @@ function LandingPage() {
               "Backup automático da sua base de medições",
               "Você pode exportar ou apagar seus dados quando quiser",
             ].map((s) => (
-              <li key={s} className="flex items-start gap-3 rounded-xl border border-border/60 bg-card/70 p-4 text-sm backdrop-blur">
+              <li
+                key={s}
+                className="flex items-start gap-3 rounded-xl border border-border/60 bg-card/70 p-4 text-sm backdrop-blur"
+              >
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
                 <span>{s}</span>
               </li>
@@ -319,12 +389,13 @@ function LandingPage() {
             <p className="mx-auto mt-4 max-w-lg text-primary-foreground/85">
               Um hábito de dez segundos que transforma sua próxima consulta.
             </p>
-            <Link to="/login" className="mt-8 inline-block">
+            <Link to={isLogged ? "/dashboard" : "/login"} className="mt-8 inline-block">
               <Button
                 size="lg"
                 className="h-12 rounded-full bg-background px-8 text-base text-foreground shadow-soft hover:bg-background/90"
               >
-                Criar meu diário grátis <ArrowRight className="ml-1.5 h-4 w-4" />
+                {isLogged ? "Acessar meu diário" : "Criar meu diário grátis"}{" "}
+                <ArrowRight className="ml-1.5 h-4 w-4" />
               </Button>
             </Link>
           </div>
@@ -341,8 +412,12 @@ function LandingPage() {
             </span>
           </div>
           <div className="flex items-center gap-6 text-xs text-muted-foreground">
-            <Link to="/login" className="hover:text-foreground">Entrar</Link>
-            <a href="#seguranca" className="hover:text-foreground">Segurança</a>
+            <Link to="/login" className="hover:text-foreground">
+              Entrar
+            </Link>
+            <a href="#seguranca" className="hover:text-foreground">
+              Segurança
+            </a>
           </div>
         </div>
       </footer>
