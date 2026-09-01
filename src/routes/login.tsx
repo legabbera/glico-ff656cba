@@ -102,18 +102,17 @@ function LoginPage() {
   return (
     <div className="relative flex min-h-[88vh] items-center justify-center px-4">
       <MeshGradient className="opacity-70" />
-      <Card className="w-full max-w-md border-border/60 shadow-card backdrop-blur-sm">
-        <CardHeader className="text-center">
+      <Card className="w-full max-w-[400px] min-h-[600px] flex flex-col justify-center border-border/40 shadow-xl rounded-3xl backdrop-blur-sm">
+        <CardHeader className="text-center pt-8">
           <Link to="/" className="block w-fit mx-auto">
             <img src={gllicoLogo} alt="Gllico" className="h-24 w-auto transition-opacity hover:opacity-80" />
           </Link>
-          <CardTitle className="font-display mt-3 text-3xl">
+          <CardTitle className="font-display mt-4 text-2xl font-bold">
             {mode === "login" ? "Entrar" : "Criar conta"}
           </CardTitle>
-          <CardDescription>Diário de glicose</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form className="space-y-4" onSubmit={onSubmit}>
+        <CardContent className="pb-8">
+          <form className="space-y-5" onSubmit={onSubmit}>
             {mode === "signup" && (
               <>
                 <div>
@@ -133,7 +132,7 @@ function LoginPage() {
               </>
             )}
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-muted-foreground font-normal ml-1">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -141,10 +140,11 @@ function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
+                className="mt-1.5 h-11 rounded-full px-4"
               />
             </div>
             <div>
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password" className="text-muted-foreground font-normal ml-1">Senha</Label>
               <Input
                 id="password"
                 type="password"
@@ -153,20 +153,23 @@ function LoginPage() {
                 required
                 minLength={6}
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
+                className="mt-1.5 h-11 rounded-full px-4"
               />
             </div>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="h-11 w-full bg-accent text-accent-foreground hover:bg-accent/90"
-            >
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {mode === "login" ? "Entrar" : "Criar conta"}
-            </Button>
+            <div className="pt-2">
+              <Button
+                type="submit"
+                disabled={loading}
+                className="h-11 w-full rounded-full bg-accent text-accent-foreground hover:bg-accent/90 text-base"
+              >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {mode === "login" ? "Entrar" : "Criar conta"}
+              </Button>
+            </div>
 
-            <div className="relative flex py-1 items-center">
+            <div className="relative flex py-3 items-center">
               <div className="flex-grow border-t border-border/60"></div>
-              <span className="flex-shrink mx-3 text-xs text-muted-foreground uppercase">ou</span>
+              <span className="flex-shrink mx-4 text-xs text-muted-foreground uppercase">OU</span>
               <div className="flex-grow border-t border-border/60"></div>
             </div>
 
@@ -175,12 +178,12 @@ function LoginPage() {
               variant="outline"
               disabled={loading}
               onClick={handleGoogleLogin}
-              className="h-11 w-full border-border/60 hover:bg-muted"
+              className="h-11 w-full rounded-full border-border hover:bg-muted/50 text-foreground font-normal"
             >
               <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
                 <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
               </svg>
-              Continuar com Google
+              Continuar Com Google
             </Button>
 
             <button
