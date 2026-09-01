@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -104,7 +104,9 @@ function LoginPage() {
       <MeshGradient className="opacity-70" />
       <Card className="w-full max-w-md border-border/60 shadow-card backdrop-blur-sm">
         <CardHeader className="text-center">
-          <img src={gllicoLogo} alt="Gllico" className="mx-auto h-24 w-auto" />
+          <Link to="/" className="block w-fit mx-auto">
+            <img src={gllicoLogo} alt="Gllico" className="h-24 w-auto transition-opacity hover:opacity-80" />
+          </Link>
           <CardTitle className="font-display mt-3 text-3xl">
             {mode === "login" ? "Entrar" : "Criar conta"}
           </CardTitle>
