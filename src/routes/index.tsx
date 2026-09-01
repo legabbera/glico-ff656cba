@@ -412,6 +412,14 @@ function LandingPage() {
             </span>
           </div>
           <div className="flex items-center gap-6 text-xs text-muted-foreground">
+            <a
+              href="https://www.instagram.com/gllicoofc/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground"
+            >
+              Instagram
+            </a>
             <Link to="/login" className="hover:text-foreground">
               Entrar
             </Link>

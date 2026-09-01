@@ -181,6 +181,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { Instagram } from "lucide-react";
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
@@ -207,6 +208,17 @@ function RootComponent() {
           >
             <Outlet />
           </main>
+          
+          <a
+            href="https://www.instagram.com/gllicoofc/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white shadow-lg transition-transform hover:scale-110 active:scale-95"
+            aria-label="Instagram do Gllico"
+          >
+            <Instagram className="h-7 w-7" />
+          </a>
+
           <PWAInstallPrompt />
         </div>
         <Toaster richColors position="top-center" />
