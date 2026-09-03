@@ -102,7 +102,11 @@ function AdminPage() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-destructive font-mono break-words">
-            {q.error instanceof Error ? q.error.message : String(q.error)}
+            {q.error instanceof Error
+              ? (q.error.message.includes("<!doctype html>") || q.error.message.includes("<html")
+                ? "Erro interno do servidor (500). Verifique os logs da Vercel ou as chaves de ambiente."
+                : q.error.message)
+              : String(q.error)}
           </p>
           <Button variant="outline" className="mt-4" onClick={() => refresh()}>
             Tentar Novamente

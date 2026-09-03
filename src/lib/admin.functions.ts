@@ -44,71 +44,76 @@ export type AdminUser = {
 export const listUsersAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.supabase, context.userId);
-    const { data: profiles, error } = await supabaseAdmin
-      .from("profiles")
-      .select("id, email, display_name, diabetes_type, is_active, free_access, created_at, bairro, municipio, uf, subscription_status")
-      .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
+    try {
+      await assertAdmin(context.supabase, context.userId);
+      const { data: profiles, error } = await supabaseAdmin
+        .from("profiles")
+        .select("id, email, display_name, diabetes_type, is_active, free_access, created_at, bairro, municipio, uf, subscription_status")
+        .order("created_at", { ascending: false });
+      if (error) throw new Error(error.message);
 
-    const { data: roles } = await supabaseAdmin.from("user_roles").select("user_id, role");
-    const adminSet = new Set((roles ?? []).filter((r) => r.role === "admin").map((r) => r.user_id));
+      const { data: roles } = await supabaseAdmin.from("user_roles").select("user_id, role");
+      const adminSet = new Set((roles ?? []).filter((r) => r.role === "admin").map((r) => r.user_id));
 
-    const { data: counts } = await supabaseAdmin
-      .from("measurements")
-      .select("user_id, data, hora");
-    const byUser = new Map<string, { count: number; last: string | null }>();
-    for (const m of counts ?? []) {
-      const cur = byUser.get(m.user_id) ?? { count: 0, last: null };
-      cur.count += 1;
-      const ts = `${m.data}T${(m.hora as string) ?? "00:00"}`;
-      if (!cur.last || ts > cur.last) cur.last = ts;
-      byUser.set(m.user_id, cur);
-    }
-
-    const users: AdminUser[] = (profiles ?? []).map((p) => {
-      const createdAt = (p.created_at as string | null) ?? null;
-      let trialDaysLeft = 15;
-      if (createdAt) {
-        const end = new Date(createdAt).getTime() + 15 * 24 * 60 * 60 * 1000;
-        trialDaysLeft = Math.max(0, Math.ceil((end - Date.now()) / (24 * 60 * 60 * 1000)));
+      const { data: counts } = await supabaseAdmin
+        .from("measurements")
+        .select("user_id, data, hora");
+      const byUser = new Map<string, { count: number; last: string | null }>();
+      for (const m of counts ?? []) {
+        const cur = byUser.get(m.user_id) ?? { count: 0, last: null };
+        cur.count += 1;
+        const ts = `${m.data}T${(m.hora as string) ?? "00:00"}`;
+        if (!cur.last || ts > cur.last) cur.last = ts;
+        byUser.set(m.user_id, cur);
       }
-      return {
-        id: p.id as string,
-        email: p.email as string | null,
-        display_name: p.display_name as string | null,
-        diabetes_type: p.diabetes_type as AdminUser["diabetes_type"],
-        is_active: p.is_active as boolean,
-        is_admin: adminSet.has(p.id as string),
-        measurements_count: byUser.get(p.id as string)?.count ?? 0,
-        last_measurement: byUser.get(p.id as string)?.last ?? null,
-        free_access: !!(p.free_access as boolean | null),
-        created_at: createdAt,
-        trial_days_left: trialDaysLeft,
-        bairro: p.bairro as string | null,
-        municipio: p.municipio as string | null,
-        uf: p.uf as string | null,
-        subscription_status: p.subscription_status as string | null,
+
+      const users: AdminUser[] = (profiles ?? []).map((p) => {
+        const createdAt = (p.created_at as string | null) ?? null;
+        let trialDaysLeft = 15;
+        if (createdAt) {
+          const end = new Date(createdAt).getTime() + 15 * 24 * 60 * 60 * 1000;
+          trialDaysLeft = Math.max(0, Math.ceil((end - Date.now()) / (24 * 60 * 60 * 1000)));
+        }
+        return {
+          id: p.id as string,
+          email: p.email as string | null,
+          display_name: p.display_name as string | null,
+          diabetes_type: p.diabetes_type as AdminUser["diabetes_type"],
+          is_active: p.is_active as boolean,
+          is_admin: adminSet.has(p.id as string),
+          measurements_count: byUser.get(p.id as string)?.count ?? 0,
+          last_measurement: byUser.get(p.id as string)?.last ?? null,
+          free_access: !!(p.free_access as boolean | null),
+          created_at: createdAt,
+          trial_days_left: trialDaysLeft,
+          bairro: p.bairro as string | null,
+          municipio: p.municipio as string | null,
+          uf: p.uf as string | null,
+          subscription_status: p.subscription_status as string | null,
+        };
+      });
+
+      const now = Date.now();
+      const metrics = {
+        totalUsers: users.length,
+        activeSubscribers: users.filter((u) => u.subscription_status === "active").length,
+        dau: users.filter((u) => {
+          if (!u.last_measurement) return false;
+          const diff = now - new Date(u.last_measurement).getTime();
+          return diff <= 24 * 60 * 60 * 1000;
+        }).length,
+        regions: users.reduce((acc, u) => {
+          const uf = u.uf || "N/A";
+          acc[uf] = (acc[uf] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>),
       };
-    });
 
-    const now = Date.now();
-    const metrics = {
-      totalUsers: users.length,
-      activeSubscribers: users.filter((u) => u.subscription_status === "active").length,
-      dau: users.filter((u) => {
-        if (!u.last_measurement) return false;
-        const diff = now - new Date(u.last_measurement).getTime();
-        return diff <= 24 * 60 * 60 * 1000;
-      }).length,
-      regions: users.reduce((acc, u) => {
-        const uf = u.uf || "N/A";
-        acc[uf] = (acc[uf] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>),
-    };
-
-    return { users, metrics };
+      return { users, metrics };
+    } catch (e: any) {
+      // Retornar o erro como propriedade em vez de dar throw no Vercel (evita 500 HTML)
+      throw new Error(`Admin fetch failed: ${e.message}`);
+    }
   });
 
 export const setUserRoleAdmin = createServerFn({ method: "POST" })
