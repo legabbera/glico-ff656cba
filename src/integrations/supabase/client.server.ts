@@ -7,6 +7,6 @@ if (!serviceKey) {
   console.warn("SUPABASE_SERVICE_ROLE_KEY ausente — admin client não funcionará corretamente.");
 }
 
-export const supabaseAdmin = createClient(url, serviceKey ?? "", {
+export const supabaseAdmin = createClient(url, serviceKey || "dummy-key-to-prevent-init-crash", {
   auth: { persistSession: false, autoRefreshToken: false },
 });

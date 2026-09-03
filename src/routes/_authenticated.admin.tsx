@@ -118,7 +118,26 @@ function AdminPage() {
 
   const users = q.data?.users ?? [];
   const metrics = (q.data as any)?.metrics ?? { totalUsers: 0, activeSubscribers: 0, dau: 0, regions: {} };
+  const customError = (q.data as any)?.error;
   
+  if (customError) {
+    return (
+      <Card className="mx-auto max-w-lg">
+        <CardHeader>
+          <CardTitle>Acesso negado / Erro</CardTitle>
+          <CardDescription>Ocorreu um erro no servidor.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-destructive font-mono break-words">
+            {customError}
+          </p>
+          <Button variant="outline" className="mt-4" onClick={() => refresh()}>
+            Tentar Novamente
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
   // Prepare chart data
   const regionData = Object.entries(metrics.regions).map(([uf, count]) => ({
     name: uf,

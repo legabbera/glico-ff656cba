@@ -50,7 +50,7 @@ export const listUsersAdmin = createServerFn({ method: "GET" })
         .from("profiles")
         .select("id, email, display_name, diabetes_type, is_active, free_access, created_at, bairro, municipio, uf, subscription_status")
         .order("created_at", { ascending: false });
-      if (error) throw new Error(error.message);
+      if (error) return { error: error.message, users: [], metrics: null };
 
       const { data: roles } = await supabaseAdmin.from("user_roles").select("user_id, role");
       const adminSet = new Set((roles ?? []).filter((r) => r.role === "admin").map((r) => r.user_id));
@@ -109,10 +109,10 @@ export const listUsersAdmin = createServerFn({ method: "GET" })
         }, {} as Record<string, number>),
       };
 
-      return { users, metrics };
+      return { error: null, users, metrics };
     } catch (e: any) {
-      // Retornar o erro como propriedade em vez de dar throw no Vercel (evita 500 HTML)
-      throw new Error(`Admin fetch failed: ${e.message}`);
+      // Retornar o erro no objeto para que o client possa trata-lo e evitar quebra da página
+      return { error: `Admin fetch failed: ${e.message}`, users: [], metrics: null };
     }
   });
 
