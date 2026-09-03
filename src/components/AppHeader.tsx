@@ -18,6 +18,7 @@ const BASE_NAV = [
   { to: "/dashboard", label: "DASHBOARD", icon: BarChart3, exact: false },
   { to: "/historico", label: "HISTÓRICO", icon: ListChecks, exact: false },
   { to: "/perfil", label: "PERFIL", icon: UserIcon, exact: false },
+  { to: "/suporte", label: "SUPORTE", icon: MessageSquare, exact: false },
 ] as const;
 
 export function AppHeader() {
