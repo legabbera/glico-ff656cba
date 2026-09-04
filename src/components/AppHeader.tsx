@@ -83,7 +83,7 @@ export function AppHeader() {
       {/* Top header — visible on tablet/desktop */}
       <header className="sticky top-0 z-30 hidden border-b border-border/60 bg-background/80 backdrop-blur sm:block">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <Link to="/registrar" className="flex items-center gap-2">
+          <Link to="/dashboard" className="flex items-center gap-2">
             <img
               src={gllicoLogo}
               alt="Gllico"
@@ -155,12 +155,12 @@ export function AppHeader() {
       {/* Compact mobile top bar — brand only */}
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur sm:hidden">
         <div className="flex items-center justify-between gap-2 px-4 py-2.5">
-          <div className="flex items-center gap-2">
+          <Link to="/dashboard" className="flex items-center gap-2">
             <img src={gllicoLogo} alt="Gllico" style={{ width: 130, height: 52.7 }} />
             <div className="leading-tight">
               <p className="text-[10px] text-muted-foreground">Diário do paciente</p>
             </div>
-          </div>
+          </Link>
           <div className="flex items-center gap-3 text-muted-foreground">
             {badge && (
               <Link

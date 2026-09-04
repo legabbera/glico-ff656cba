@@ -344,7 +344,7 @@ function LandingPage() {
               Segurança
             </p>
             <h2 className="mt-3 text-3xl font-bold uppercase sm:text-4xl">
-              Sues dados de saúde ficam com você
+              Seus dados de saúde ficam com você
             </h2>
             <p className="mt-4 max-w-lg text-muted-foreground">
               Tudo é armazenado em infraestrutura em nuvem com criptografia, controle de acesso por
